@@ -8,6 +8,12 @@
 #include "../abseil-cpp/absl/flags/flag.h"
 #include "../abseil-cpp/absl/strings/substitute.h"
 
+ABSL_FLAG(std::string, data_root, "", "Data root");
+ABSL_FLAG(int64_t, train_batch_size, 64, "Train batch size");
+ABSL_FLAG(int64_t, test_batch_size, 1000, "Test batch size");
+ABSL_FLAG(int64_t, number_of_epochs, 5, "Number of epochs");
+ABSL_FLAG(int64_t, log_interval, 10, "Log interval");
+
 void testBasicTensorOps() {
   auto mat = torch::rand({3, 3});
   auto mat2 = torch::rand({3, 3});
@@ -197,7 +203,11 @@ void testTrainTestMnist() {
   Net model;
   model.to(device);
 
-  MnistConfig config("/Users/saminda/Tmp/data_mnist", 64, 1000, 5, 10);
+  MnistConfig config(absl::GetFlag(FLAGS_data_root),
+                     absl::GetFlag(FLAGS_train_batch_size),
+                     absl::GetFlag(FLAGS_test_batch_size),
+                     absl::GetFlag(FLAGS_number_of_epochs),
+                     absl::GetFlag(FLAGS_log_interval));
 
   auto train_dataset = torch::data::datasets::MNIST(config.DataRoot())
       .map(torch::data::transforms::Normalize<>(0.1307, 0.3081))
