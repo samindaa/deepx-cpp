@@ -2,8 +2,11 @@
 // Created by Saminda Abeyruwan on 2019-07-13.
 //
 
-#include <iostream>
 #include <string>
+#include <vector>
+#include <sstream>
+#include <iostream>
+
 #include <torch/torch.h>
 
 #include "absl/flags/flag.h"
@@ -244,11 +247,86 @@ void testTrainTestMnist() {
 
 }
 
+// Regression
+torch::Tensor make_feature(torch::Tensor x, int64_t poly_degree) {
+  x = x.unsqueeze(1);
+  std::vector<torch::Tensor> xs;
+  for (int64_t i = 0; i < poly_degree; ++i) {
+    xs.emplace_back(x.pow(i + 1));
+  }
+  return torch::cat(xs, 1);
+}
+
+torch::Tensor f(torch::Tensor x, torch::Tensor w, torch::Tensor b) {
+  return x.mm(w) + b.item();
+}
+
+std::pair<torch::Tensor, torch::Tensor> get_batch(torch::Tensor w,
+                                                  torch::Tensor b,
+                                                  int64_t poly_degree,
+                                                  int64_t batch_size = 32) {
+  auto random = torch::randn({batch_size});
+  auto x = make_feature(random, poly_degree);
+  auto y = f(x, w, b);
+  return {x, y};
+}
+
+std::string poly_desc(torch::Tensor w, torch::Tensor b) {
+  auto size = w.size(0);
+  std::ostringstream stream;
+  stream << "y = ";
+  for (int64_t i = 0; i < size; ++i) {
+    stream << w[i].item<float>() << " x^" << size - i << " ";
+  }
+  stream << "+ " << b[0].item<float>();
+  return stream.str();
+}
+
+void testPoly() {
+  const int64_t poly_degree = 4;
+  auto w_target = torch::randn({poly_degree, 1}) * 5;
+  auto b_target = torch::randn({1}) * 5;
+
+  // Define the model and optimizer
+  auto fc = torch::nn::Linear(w_target.size(0), 1);
+  torch::optim::SGD optim(fc->parameters(), 0.1);
+
+  float loss = 0;
+  int64_t batch_idx = 0;
+
+  while (++batch_idx) {
+    torch::Tensor batch_x, batch_y;
+    std::tie(batch_x, batch_y) = get_batch(w_target, b_target, poly_degree);
+
+    // Reset gradients
+    optim.zero_grad();
+
+    // Forward pass
+    auto output = torch::smooth_l1_loss(fc(batch_x), batch_y);
+    loss = output.item<float>();
+
+    // Backward pass
+    output.backward();
+
+    // Apply gradients
+    optim.step();
+
+    if (loss < 1e-3f) {
+      break;
+    }
+  }
+
+  std::cout << absl::Substitute("Loss: $0 after $1 batches", loss, batch_idx) << std::endl;
+  std::cout << absl::Substitute("==> Learned function:\t $0", poly_desc(fc->weight.view({-1}), fc->bias)) << std::endl;
+  std::cout << absl::Substitute("==> Actual function:\t $0", poly_desc(w_target.view({-1}), b_target)) << std::endl;
+}
+
 int main(int argc, char **argv) {
   absl::ParseCommandLine(argc, argv);
   std::cout << "*** Torch ST ***" << std::endl;
 //  testModel();
-  testTrainTestMnist();
+//  testTrainTestMnist();
+  testPoly();
   std::cout << "*** Torch EN ***" << std::endl;
   return 0;
 }
