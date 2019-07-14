@@ -3,10 +3,12 @@
 //
 
 #include <iostream>
+#include <string>
 #include <torch/torch.h>
 
-#include "../abseil-cpp/absl/flags/flag.h"
-#include "../abseil-cpp/absl/strings/substitute.h"
+#include "absl/flags/flag.h"
+#include "absl/flags/parse.h"
+#include "absl/strings/substitute.h"
 
 ABSL_FLAG(std::string, data_root, "", "Data root");
 ABSL_FLAG(int64_t, train_batch_size, 64, "Train batch size");
@@ -243,6 +245,7 @@ void testTrainTestMnist() {
 }
 
 int main(int argc, char **argv) {
+  absl::ParseCommandLine(argc, argv);
   std::cout << "*** Torch ST ***" << std::endl;
 //  testModel();
   testTrainTestMnist();
