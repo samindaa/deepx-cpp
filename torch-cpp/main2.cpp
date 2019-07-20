@@ -2,14 +2,12 @@
 // Created by saminda on 7/16/19.
 //
 
+#include <cassert>
 #include <iostream>
 
 #include <torch/torch.h>
-#include <torch/data/datasets/base.h>
-#include <torch/data/example.h>
-#include <torch/types.h>
-#include <c10/util/Exception.h>
 
+#include "cifar.h"
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
 #include "absl/strings/substitute.h"
@@ -25,136 +23,25 @@ using ::torch::nn::Module;
 using ::torch::nn::Linear;
 using ::torch::nn::Sequential;
 
-namespace torch {
-namespace data {
-namespace datasets {
-
-struct CIFAR : public Dataset<CIFAR> {
-  /// The mode in which the dataset is loaded.
-  enum class Mode { kTrain, kTest };
-
-  /// Loads the CIFAR dataset from the `root` path.
-  ///
-  /// The supplied `root` path should contain the *content* of the unzipped
-  /// CIFAR dataset, available from https://www.cs.toronto.edu/~kriz/cifar.html.
-  explicit CIFAR(const std::string &root, Mode mode = Mode::kTrain);
-
-  /// Returns the `Example` at the given `index`.
-  Example<> get(size_t index) override;
-
-  /// Returns the size of the dataset.
-  optional<size_t> size() const override;
-
-  /// Returns true if this is the training subset of CIFAR.
-  bool is_train() const noexcept;
-
-  /// Returns all images stacked into a single tensor.
-  const Tensor &images() const;
-
-  /// Returns all targets stacked into a single tensor.
-  const Tensor &targets() const;
-
- private:
-  bool train_;
-  Tensor images_, targets_;
-};
-
-namespace {
-constexpr uint32_t kCIFARSize = 32;
-constexpr uint32_t kCIFAR10BatchSize = 10000;
-constexpr uint32_t kCIFAR10TrainBatches = 5;
-
-constexpr const char *kTrainFilenamePrefix = "data_batch";
-constexpr const char *kTestFilename = "test_batch.bin";
-
-std::string join_paths(std::string head, const std::string &tail) {
-  if (head.back() != '/') {
-    head.push_back('/');
-  }
-  head += tail;
-  return head;
-}
-
-void read_file(std::ifstream &file, std::vector<Tensor> &x, std::vector<Tensor> &y) {
-  for (uint32_t i = 0; i < kCIFAR10BatchSize; ++i) {
-    auto y_tensor = torch::empty(1, torch::kByte);
-    file.read(reinterpret_cast<char *>(y_tensor.data_ptr()), y_tensor.numel());
-    auto x_tensor = torch::empty({1, 3, kCIFARSize, kCIFARSize}, torch::kByte);
-    file.read(reinterpret_cast<char *>(x_tensor.data_ptr()), x_tensor.numel());
-    x.emplace_back(x_tensor);
-    y.emplace_back(y_tensor);
-  }
-}
-
-std::pair<Tensor, Tensor> read_images_targets(const std::string &root, bool train) {
-  std::vector<Tensor> x, y;
-  if (train) {
-    for (uint32_t i = 1; i <= kCIFAR10TrainBatches; ++i) {
-      const auto path = join_paths(root, absl::Substitute("$0_$1.bin", kTrainFilenamePrefix, i));
-      std::ifstream file(path, std::ios::binary);
-      if (!file.is_open()) {
-        std::cerr << absl::Substitute("Path: $0 is not found.", path) << std::endl;
-        exit(-1);
-      }
-      read_file(file, x, y);
-    }
-  } else {
-    const auto path = join_paths(root, kTestFilename);
-    std::ifstream file(path, std::ios::binary);
-    if (!file.is_open()) {
-      std::cerr << absl::Substitute("Path: $0 is not found.", path) << std::endl;
-      exit(-1);
-    }
-    read_file(file, x, y);
-  }
-  return {torch::cat(x, 0).to(torch::kFloat32).div_(255), torch::cat(y, 0).to(torch::kInt64)};
-}
-
-} // namespace
-
-CIFAR::CIFAR(const std::string &root, Mode mode) : train_(mode == Mode::kTrain) {
-  std::tie(images_, targets_) = read_images_targets(root, train_);
-}
-
-Example<> CIFAR::get(size_t index) {
-  return {images_[index], targets_[index]};
-}
-
-optional<size_t> CIFAR::size() const {
-  return images_.size(0);
-}
-
-bool CIFAR::is_train() const noexcept {
-  return train_;
-}
-
-const Tensor &CIFAR::images() const {
-  return images_;
-}
-
-const Tensor &CIFAR::targets() const {
-  return targets_;
-}
-
-} // namespace datasets
-} // namespace data
-} // namespace torch
-
 class BasicBlock : public Module {
  public:
-  BasicBlock(uint32_t inplanes,
+  BasicBlock(uint32_t in_planes,
              uint32_t planes,
              uint32_t stride = 1,
              bool is_downsample = false)
       : stride_(stride), is_downsample_(is_downsample) {
-    conv1_ = register_module("conv1", Conv2d(Conv2dOptions(inplanes, planes, 3).stride(stride).padding(1)));
+    conv1_ = register_module("conv1",
+                             Conv2d(Conv2dOptions(in_planes, planes, 3).stride(stride).padding(1).with_bias(false)));
+    conv2_ = register_module("conv2", Conv2d(Conv2dOptions(planes, planes, 3).stride(1).padding(1).with_bias(false)));
+
     bn1_ = register_module("bn1", BatchNorm(BatchNormOptions(planes)));
-    // ReLU
-    conv2_ = register_module("conv2", Conv2d(Conv2dOptions(planes, planes, 3).stride(1).padding(1)));
     bn2_ = register_module("bn2", BatchNorm(BatchNormOptions(planes)));
+
     if (is_downsample_) {
       downsample_ = register_module("downsample",
-                                    Sequential(Conv2d(Conv2dOptions(inplanes, planes, 3).stride(2).padding(1).with_bias(
+                                    Sequential(Conv2d(Conv2dOptions(in_planes,
+                                                                    planes,
+                                                                    3).stride(2).padding(1).with_bias(
                                         false))));
     }
   }
@@ -183,39 +70,44 @@ class BasicBlock : public Module {
 
 class ResNet : public Module {
  public:
-  explicit ResNet(uint32_t n = 1) : n_(n) {
-    conv1_ = register_module("conv1", Conv2d(Conv2dOptions(3, 16, 3).stride(1).padding(1).with_bias(false)));
-    bn1_ = register_module("bn1", BatchNorm(BatchNormOptions(16)));
+  explicit ResNet(uint32_t n) {
+    assert((n - 2) % 6 == 0); // Depth should be 6n+2
+    n_ = (n - 2) / 6;
+    conv_ = register_module("conv1", Conv2d(Conv2dOptions(3, 16, 3).stride(1).padding(1).with_bias(false)));
+    bn_ = register_module("bn1", BatchNorm(BatchNormOptions(16)));
     // ReLU
     // TODO(saminda): make_layerauto layers =
     layer1_ = MakeLayer(16, 16, 1, "layer1");
     layer2_ = MakeLayer(16, 32, 2, "layer2");
     layer3_ = MakeLayer(32, 64, 2, "layer3");
-    fc_ = register_module("fc", Linear(8 * 8 * 64, 10));
+    fc_ = register_module("fc", Linear(64, 10));
   }
 
   torch::Tensor forward(torch::Tensor x) {
-    x = torch::relu(bn1_->forward(conv1_->forward(x))); // 32x32
+    x = torch::relu(bn_->forward(conv_->forward(x))); // 32x32
     x = layer1_->forward(x); // 32x32
     x = layer2_->forward(x); // 16x16
     x = layer3_->forward(x); // 8x8
-    x = x.view({-1, 8 * 8 * 64});
+    x = torch::avg_pool2d(x, 8, 1); // 1x1
+    x = x.view({x.size(0), -1});
     x = fc_->forward(x);
     return torch::log_softmax(x, /*dim*/1);
   }
 
  private:
-  Sequential MakeLayer(uint32_t inplanes, uint32_t planes, uint32_t stride, const std::string &name) {
+  Sequential MakeLayer(uint32_t in_planes, uint32_t planes, uint32_t stride, const std::string &name) {
     auto layers = register_module(name, Sequential());
-    layers->push_back(BasicBlock(inplanes, planes, stride, stride != 1));
-    // TODO(saminda): n_ blocks
+    layers->push_back(BasicBlock(in_planes, planes, stride, stride != 1));
+    for (uint32_t i = 1; i < n_; ++i) {
+      layers->push_back(BasicBlock(planes, planes));
+    }
     return layers;
   }
 
  private:
   uint32_t n_;
-  Conv2d conv1_{nullptr};
-  BatchNorm bn1_{nullptr};
+  Conv2d conv_{nullptr};
+  BatchNorm bn_{nullptr};
   // ReLU
   Sequential layer1_{nullptr};
   Sequential layer2_{nullptr};
@@ -295,7 +187,7 @@ void testTrainTestResNet() {
   }
   torch::Device device(device_type);
 
-  ResNet model;
+  ResNet model(20);
   model.to(device);
 
   auto train_dataset = torch::data::datasets::CIFAR(absl::GetFlag(FLAGS_data_root))
@@ -318,7 +210,7 @@ void testTrainTestResNet() {
   torch::optim::Adam
       optimizer(model.parameters(), torch::optim::AdamOptions(0.01));
 
-  for (size_t epoch = 1; epoch <= 10; ++epoch) {
+  for (size_t epoch = 1; epoch <= 50; ++epoch) {
     train(epoch,
           model,
           device,
@@ -331,11 +223,12 @@ void testTrainTestResNet() {
 }
 
 void testResNetModel() {
-  ResNet res_net;
+  ResNet res_net(20);
   std::cout << res_net << std::endl;
   auto x = torch::randn({1, 3, 32, 32});
   auto out = res_net.forward(x);
   std::cout << "res_out: " << out << std::endl;
+//  std::cout << res_net << std::endl;
 }
 
 void testCifar() {
@@ -356,7 +249,7 @@ void testNLL() {
   x = torch::stack({x});
   y = torch::stack({y});
   std::cout << x.sizes() << " " << y.sizes() << std::endl;
-  ResNet res_net;
+  ResNet res_net(20);
   auto pred = res_net.forward(x);
   auto log_softmax = torch::log_softmax(x, 1);
   auto out = torch::nll_loss(pred, y);
