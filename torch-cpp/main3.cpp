@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <vector>
 
 #include <torch/torch.h>
 
@@ -31,27 +32,21 @@ class MobileNet : public Module {
  public:
   MobileNet() {
     model_ = register_module("model", Sequential());
-    conv_bn(model_, 3, 16, 1);
-    conv_dw(model_, 16, 16, 1);
-    conv_dw(model_, 16, 16, 1);
-    conv_dw(model_, 16, 32, 1);
-
-    conv_dw(model_, 32, 32, 2);
-    conv_dw(model_, 32, 32, 1);
-    conv_dw(model_, 32, 32, 1);
-    conv_dw(model_, 32, 64, 1);
-
-    conv_dw(model_, 64, 64, 2);
-    conv_dw(model_, 64, 64, 1);
-    conv_dw(model_, 64, 64, 1);
-    conv_dw(model_, 64, 64, 1);
-
-    fc_ = register_module("fc", Linear(64, 10));
+    std::vector<std::pair<int, int>>
+        cfg = {{64, 1}, {128, 2}, {128, 1}, {256, 2}, {256, 1}, {512, 2}, {512, 1}, {512, 1}, {512, 1}, {512, 1},
+               {512, 1}, {1024, 2}, {1024, 1}}; // (inp, stride)
+    uint32_t inp = 32;
+    conv_bn(model_, 3, inp, 1);
+    for (const auto& p : cfg) {
+      conv_dw_and_pw(model_, inp, p.first, p.second);
+      inp = p.first;
+    }
+    fc_ = register_module("fc", Linear(1024, 10));
   }
 
   torch::Tensor forward(torch::Tensor x) {
     x = model_->forward(x);
-    x = torch::avg_pool2d(x, 8);
+    x = torch::avg_pool2d(x, 2);
     x = x.view({x.size(0), -1});
     x = fc_->forward(x);
     return torch::log_softmax(x, /*dim*/1);
@@ -67,10 +62,10 @@ class MobileNet : public Module {
     m->push_back(Functional(torch::relu));
   }
 
-  void conv_dw(Sequential &m,
-               uint32_t inp,
-               uint32_t out,
-               uint32_t stride) {
+  void conv_dw_and_pw(Sequential &m,
+                      uint32_t inp,
+                      uint32_t out,
+                      uint32_t stride) {
     /*3x3*/
     m->push_back(Conv2d(Conv2dOptions(inp, inp, 3).stride(stride).padding(1).groups(inp).with_bias(false)));
     m->push_back(BatchNorm(BatchNormOptions(inp)));
@@ -205,6 +200,44 @@ void testTrainTestMobileNet() {
     }
   }
 }
+
+void testModelLoad() {
+  std::cout << "Test MobileNet Load" << std::endl;
+  torch::DeviceType device_type;
+  if (torch::cuda::is_available()) {
+    std::cout << "CUDA available! Training on GPU." << std::endl;
+    device_type = torch::kCUDA;
+  } else {
+    std::cout << "Training on CPU." << std::endl;
+    device_type = torch::kCPU;
+  }
+  torch::Device device(device_type);
+  auto model = std::make_shared<MobileNet>();
+  torch::load(model, "mobilenet-checkpoint.pt");
+  auto test_dataset = torch::data::datasets::CIFAR(
+      absl::GetFlag(FLAGS_data_root), torch::data::datasets::CIFAR::Mode::kTest)
+      .map(torch::data::transforms::Normalize<>({0.4914, 0.4822, 0.4465}, {0.2023, 0.1994, 0.2010}))
+      .map(torch::data::transforms::Stack<>());
+  const size_t test_dataset_size = test_dataset.size().value();
+  auto test_loader =
+      torch::data::make_data_loader(std::move(test_dataset),
+                                    1024);
+  test(model, device, *test_loader, test_dataset_size);
+
+}
+
+//void testTensor() {
+//  auto p = [](torch::Tensor x) {
+//    std::cout << x.sizes() << std::endl;
+//    std::cout << x << std::endl;
+//    std::cout << "---" << std::endl;
+//  };
+//  auto x = torch::tensor({1, 2, 3}, torch::kFloat32).unsqueeze(1).unsqueeze(2);
+//  p(x);
+//  auto x1 = torch::randn({3, 3, 3});
+//  p(x1);
+//  p(x1 + torch::tensor({100, 200, 300}, torch::kFloat32).unsqueeze(1).unsqueeze(2));
+//}
 
 int main(int argc, char **argv) {
   absl::ParseCommandLine(argc, argv);
