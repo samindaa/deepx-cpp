@@ -31,21 +31,21 @@ using ::torch::nn::Functional;
 class MobileNet : public Module {
  public:
   MobileNet() {
-    model_ = register_module("model", Sequential());
+    body_ = register_module("body", Sequential());
     std::vector<std::pair<int, int>>
         cfg = {{64, 1}, {128, 2}, {128, 1}, {256, 2}, {256, 1}, {512, 2}, {512, 1}, {512, 1}, {512, 1}, {512, 1},
                {512, 1}, {1024, 2}, {1024, 1}}; // (inp, stride)
     uint32_t inp = 32;
-    conv_bn(model_, 3, inp, 1);
+    conv_bn(body_, 3, inp, 1);
     for (const auto& p : cfg) {
-      conv_dw_and_pw(model_, inp, p.first, p.second);
+      conv_dw_and_pw(body_, inp, p.first, p.second);
       inp = p.first;
     }
     fc_ = register_module("fc", Linear(1024, 10));
   }
 
   torch::Tensor forward(torch::Tensor x) {
-    x = model_->forward(x);
+    x = body_->forward(x);
     x = torch::avg_pool2d(x, 2);
     x = x.view({x.size(0), -1});
     x = fc_->forward(x);
@@ -77,7 +77,7 @@ class MobileNet : public Module {
   }
 
  private:
-  Sequential model_{nullptr};
+  Sequential body_{nullptr};
   Linear fc_{nullptr};
 };
 
