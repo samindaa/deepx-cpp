@@ -43,9 +43,9 @@ std::vector<std::string> glob(const std::string &pattern) {
   return filenames;
 }
 
-class Rnn : public Module {
+class CharRnnClassification : public Module {
  public:
-  Rnn(uint32_t input_size, uint32_t hidden_size, uint32_t output_size) : hidden_size_(hidden_size) {
+  CharRnnClassification(uint32_t input_size, uint32_t hidden_size, uint32_t output_size) : hidden_size_(hidden_size) {
     i2h_ = register_module("i2h", Linear(input_size + hidden_size, hidden_size));
     i2o_ = register_module("i2o", Linear(input_size + hidden_size, output_size));
   }
@@ -68,7 +68,7 @@ class Rnn : public Module {
   Linear i2o_{nullptr};
 };
 
-void testRnn() {
+void testCharRnnClassification() {
   auto filenames = glob(absl::GetFlag(FLAGS_data_pattern));
 
   std::unordered_map<char, int> all_letters;
@@ -161,7 +161,7 @@ void testRnn() {
   // Simple enough to train on CPUs.
   torch::Device device(torch::kCPU);
 
-  auto rnn = std::make_shared<Rnn>(all_letters.size(), 128, all_categories.size());
+  auto rnn = std::make_shared<CharRnnClassification>(all_letters.size(), 128, all_categories.size());
   rnn->to(device);
 
   // If you set this too high, it might explode. If too low, it might not learn.
@@ -259,7 +259,7 @@ void testRnn() {
 int main(int argc, char **argv) {
   absl::ParseCommandLine(argc, argv);
   std::cout << "*** Str SRT ***" << std::endl;
-  testRnn();
+  testCharRnnClassification();
   std::cout << "*** Str END ***" << std::endl;
   return 0;
 }
