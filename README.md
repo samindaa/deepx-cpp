@@ -6,7 +6,7 @@ This repository contains some work that I have done to port Python based models 
 This is completely exploratory and just to maintain my curiosity.  
 
 * Deep Reinforcement Learning with LibTorch.
-* Natural Language Modeling with LibTorch.
+* Natural Language Processing with LibTorch.
 * gRPC based client to communicate with OpenAI Gym.
 
 ### Protobuf and gRPC
