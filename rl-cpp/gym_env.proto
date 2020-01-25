@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+package deepx;
+
+message Discrete {
+    int32 n = 1;
+}
+
+message Box {
+    repeated int32 shape = 1;
+    repeated float low = 2;
+    repeated float high = 3;
+}
+
+message Space {
+    oneof space {
+        Discrete space_discrete = 1;
+        Box space_box = 2;
+    }
+}
+
+message State {
+    repeated float obs = 1;
+}
+
+message Step {
+    State state = 1;
+    float reward = 2;
+    bool done = 3;
+}
+
+message EnvConfig {
+    string env_id = 1;
+    Space action_space = 2;
+    Space observation_space = 3;
+}
+
+message CreateRequest {
+    string id = 1;
+}
+
+message CreateResponse {
+    EnvConfig config = 1;
+}
+
+message ResetRequest {
+    string env_id = 1;
+}
+
+message ResetResponse {
+    State state = 1;
+}
+
+message StepRequest {
+    string env_id = 1;
+    repeated int32 action = 2;
+    bool render = 3;
+}
+
+message StepResponse {
+    Step step = 1;
+}
+
+service Gym {
+    rpc Create(CreateRequest) returns (CreateResponse);
+    rpc Reset(ResetRequest) returns (ResetResponse);
+    rpc Step(StepRequest) returns (StepResponse);
+}
