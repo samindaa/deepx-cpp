@@ -58,9 +58,10 @@ State Client::Reset(const EnvConfig& config) {
   return response.state();
 }
 
-deepx::Step Client::Step(const EnvConfig& config, torch::Tensor action) {
+deepx::Step Client::Step(const EnvConfig& config, torch::Tensor action, bool render) {
   StepRequest request;
   request.set_env_id(config.env_id());
+  request.set_render(render);
   auto cpu_action = action.cpu();
   // TODO(saminda): assuming single invocation
   for (int64_t i = 0; i < cpu_action.numel(); ++i) {

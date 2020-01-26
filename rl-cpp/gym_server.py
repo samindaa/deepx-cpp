@@ -53,6 +53,7 @@ class Envs:
 
         # TODO(saminda): extensions
         if render:
+            # TODO(saminda): due to threading issues renderer fails.
             env.render()
 
         if isinstance(action, six.integer_types) or len(action) == 1:

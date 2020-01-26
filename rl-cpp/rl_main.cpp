@@ -74,6 +74,7 @@ void TestDqn() {
   auto config = client->Create("CartPole-v1");
   deepx::DqnTrainer dqn_trainer(client, config, /*buffer_size=*/10000);
   dqn_trainer.train(/*num_frames=*/10000);
+  dqn_trainer.test(true);
 }
 
 // TODO(saminda): implement the rest of the stuff

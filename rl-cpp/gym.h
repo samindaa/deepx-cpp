@@ -25,7 +25,7 @@ class Client {
 
   EnvConfig Create(const std::string& id);
   State Reset(const EnvConfig& config);
-  deepx::Step Step(const EnvConfig& config, torch::Tensor action);
+  deepx::Step Step(const EnvConfig& config, torch::Tensor action, bool render = false);
 
   Client() = default;
 

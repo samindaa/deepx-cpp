@@ -86,6 +86,7 @@ torch::Tensor DqnTrainer::get_state_tensor(const State &state) const {
 }
 
 void DqnTrainer::train(int64_t num_frames) {
+  current_model_->train();
   std::vector<float> losses, all_rewards;
   float episode_reward = 0;
   std::uniform_int_distribution<int> randint(0, config_.action_space().space_discrete().n() - 1);
@@ -132,9 +133,33 @@ void DqnTrainer::train(int64_t num_frames) {
           torch::tensor(std::vector<float>{all_rewards.rbegin(), all_rewards.rbegin() + 10}).mean().item<float>();
       std::cout << "frame_id: " << frame_id << " mean_value: " << mean_value << std::endl;
     }
-
   }
+}
 
+void DqnTrainer::test(bool render) {
+  torch::NoGradGuard no_grad;
+  current_model_->eval();
+
+  float total_reward = 0.0f;
+
+  State state = client_->Reset(config_);
+  torch::Tensor state_tensor = get_state_tensor(state);
+
+  while (true) {
+    torch::Tensor action_tensor = current_model_->act(state_tensor);
+    Step step = client_->Step(config_, action_tensor, render);
+    torch::Tensor next_state_tensor = get_state_tensor(step.state());
+    torch::Tensor reward_tensor = torch::tensor(step.reward());
+    torch::Tensor done_tensor = torch::tensor(static_cast<float>(step.done()));
+
+    state_tensor = next_state_tensor;
+    total_reward += step.reward();
+
+    if (step.done()) {
+      break;
+    }
+  }
+  std::cout << "env_id: " << config_.env_id() << " test reward: " << total_reward << std::endl;
 }
 
 } // namespace deepx

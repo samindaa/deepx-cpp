@@ -44,10 +44,12 @@ class DqnTrainer {
 
   void train(int64_t num_frames);
 
- private:
-  double epsilon_by_frame(int64_t frame_id);
+  void test(bool render = false);
 
-  torch::Tensor compute_td_loss(int64_t batch_size, float gamma);
+ protected:
+  virtual double epsilon_by_frame(int64_t frame_id);
+
+  virtual torch::Tensor compute_td_loss(int64_t batch_size, float gamma);
 
   torch::Tensor get_state_tensor(const State& state) const;
 
