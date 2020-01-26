@@ -29,4 +29,8 @@ std::vector<ReplayBuffer::Experience> ReplayBuffer::sample(int64_t batch_size) {
   return b;
 }
 
+int64_t ReplayBuffer::size() const {
+  return buffer_.size();
+}
+
 } // namespace deepx

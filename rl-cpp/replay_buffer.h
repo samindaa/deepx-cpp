@@ -25,6 +25,8 @@ class ReplayBuffer {
 
   std::vector<Experience> sample(int64_t batch_size);
 
+  int64_t size() const;
+
  private:
   int64_t capacity_;
   std::deque<Experience> buffer_;
