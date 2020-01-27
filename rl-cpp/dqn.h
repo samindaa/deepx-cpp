@@ -13,10 +13,21 @@
 
 namespace deepx {
 
-class Dqn : public torch::nn::Module {
+class DqnModule : public torch::nn::Module {
+ public:
+  virtual torch::Tensor forward(torch::Tensor x) = 0;
+
+  virtual torch::Tensor act(torch::Tensor state) {
+    torch::Tensor q_value = forward(state);
+    torch::Tensor action = std::get<1>(q_value.max(1));
+    return action;
+  }
+};
+
+class Dqn : public DqnModule{
  public:
   Dqn(int64_t num_inputs, int64_t num_actions) {
-    layaers_ = register_module("layers", torch::nn::Sequential(
+    layers_ = register_module("layers", torch::nn::Sequential(
         torch::nn::Linear(num_inputs, 128),
         torch::nn::Functional(torch::relu),
         torch::nn::Linear(128, 128),
@@ -24,27 +35,23 @@ class Dqn : public torch::nn::Module {
         torch::nn::Linear(128, num_actions)));
   }
 
-  torch::Tensor forward(torch::Tensor x) {
-    return layaers_->forward(x);
-  }
-
-  torch::Tensor act(torch::Tensor state) {
-    torch::Tensor q_value = forward(state);
-    torch::Tensor action = std::get<1>(q_value.max(1));
-    return action;
+  torch::Tensor forward(torch::Tensor x) override {
+    return layers_->forward(x);
   }
 
  private:
-  torch::nn::Sequential layaers_{nullptr};
+  torch::nn::Sequential layers_{nullptr};
 };
 
 class DqnTrainer {
  public:
-  DqnTrainer(std::shared_ptr<Client> client, const EnvConfig& config, int64_t buffer_size);
+  DqnTrainer(std::shared_ptr<Client> client, const EnvConfig& config, int64_t buffer_size = 1000);
 
   void train(int64_t num_frames);
 
   void test(bool render = false);
+
+  virtual void define_models_and_optim();
 
  protected:
   virtual double epsilon_by_frame(int64_t frame_id);
@@ -53,7 +60,7 @@ class DqnTrainer {
 
   torch::Tensor get_state_tensor(const State& state) const;
 
- private:
+ protected:
   int64_t batch_size_ = 32;
   double epsilon_start_ = 1.0;
   double epsilon_final_ = 0.01;
@@ -62,9 +69,9 @@ class DqnTrainer {
   std::shared_ptr<Client> client_;
   EnvConfig config_;
   ReplayBuffer buffer_;
-  std::shared_ptr<Dqn> current_model_;
-  std::shared_ptr<Dqn> target_model_;
-  torch::optim::Adam opt_;
+  std::shared_ptr<DqnModule> current_model_;
+  std::shared_ptr<DqnModule> target_model_;
+  std::shared_ptr<torch::optim::Adam> opt_;
   std::mt19937 rand_generator_;
   torch::Device device_;
 };

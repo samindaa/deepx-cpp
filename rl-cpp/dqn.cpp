@@ -10,15 +10,10 @@
 
 namespace deepx {
 
-DqnTrainer::DqnTrainer(std::shared_ptr<Client> client, const EnvConfig &config, int64_t buffer_size = 1000) :
+DqnTrainer::DqnTrainer(std::shared_ptr<Client> client, const EnvConfig &config, int64_t buffer_size) :
     client_(client),
     config_(config),
     buffer_{buffer_size},
-    current_model_(std::make_shared<Dqn>(config.observation_space().space_box().shape()[0],
-                                         config.action_space().space_discrete().n())),
-    target_model_(std::make_shared<Dqn>(config.observation_space().space_box().shape()[0],
-                                        config.action_space().space_discrete().n())),
-    opt_(current_model_->parameters(), torch::optim::AdamOptions{1e-3}),
     rand_generator_(std::random_device{}()),
     device_(torch::cuda::is_available() ? torch::kCUDA : torch::kCPU) {
 
@@ -27,9 +22,16 @@ DqnTrainer::DqnTrainer(std::shared_ptr<Client> client, const EnvConfig &config, 
   } else {
     std::cout << "Training on CPU." << std::endl;
   }
+}
 
+void DqnTrainer::define_models_and_optim() {
+  current_model_ = std::make_shared<Dqn>(config_.observation_space().box().shape()[0],
+                                         config_.action_space().discrete().n());
+  target_model_ = std::make_shared<Dqn>(config_.observation_space().box().shape()[0],
+                                        config_.action_space().discrete().n());
   current_model_->to(device_);
   target_model_->to(device_);
+  opt_ = std::make_shared<torch::optim::Adam>(current_model_->parameters(), torch::optim::AdamOptions{1e-3});
 
   load_from_state_dict(target_model_, current_model_);
 }
@@ -74,9 +76,9 @@ torch::Tensor DqnTrainer::compute_td_loss(int64_t batch_size, float gamma) {
   torch::Tensor expected_q_value = reward_tensor + gamma * next_q_value * (1 - done_tensor);
   torch::Tensor loss = torch::mse_loss(q_value, expected_q_value.detach());
 
-  opt_.zero_grad();
+  opt_->zero_grad();
   loss.backward();
-  opt_.step();
+  opt_->step();
 
   return loss;
 }
@@ -89,7 +91,7 @@ void DqnTrainer::train(int64_t num_frames) {
   current_model_->train();
   std::vector<float> losses, all_rewards;
   float episode_reward = 0;
-  std::uniform_int_distribution<int> randint(0, config_.action_space().space_discrete().n() - 1);
+  std::uniform_int_distribution<int> randint(0, config_.action_space().discrete().n() - 1);
   std::uniform_real_distribution<float> rand(0.0f, 1.0f);
 
   State state = client_->Reset(config_);

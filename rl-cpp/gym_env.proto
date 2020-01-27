@@ -14,8 +14,8 @@ message Box {
 
 message Space {
     oneof space {
-        Discrete space_discrete = 1;
-        Box space_box = 2;
+        Discrete discrete = 1;
+        Box box = 2;
     }
 }
 

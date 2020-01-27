@@ -67,7 +67,7 @@ add_executable(deepx_cpp
 	rl-cpp/gym.h
 	rl-cpp/gym.cpp
         ${PROTO_SRCS}
-        ${GRPC_SRCS} rl-cpp/common.h rl-cpp/common.cpp rl-cpp/dqn.cpp)
+        ${GRPC_SRCS} rl-cpp/common.h rl-cpp/common.cpp rl-cpp/dqn.cpp rl-cpp/dueling_dqn.h rl-cpp/dueling_dqn.cpp)
 
 target_link_libraries(deepx_cpp
         ${_GRPC_GRPCPP_REFLECTION}

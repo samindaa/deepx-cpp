@@ -18,6 +18,7 @@ FLAGS = flags.FLAGS
 
 flags.DEFINE_string("host", "[::]", "Gym host name.")
 flags.DEFINE_string("port", "50051", "Gym port.")
+flags.DEFINE_integer("max_workers", 10, "Max workers.")
 
 
 # Gym Environment wrapper
@@ -71,11 +72,11 @@ class Envs:
     def _get_space_properties(space: typing.Union[gym.spaces.Space, gym.spaces.Box]):
         space_config = gym_env_pb2.Space()
         if isinstance(space, gym.spaces.Discrete):
-            space_config.space_discrete.n = space.n
+            space_config.discrete.n = space.n
         else:
-            space_config.space_box.shape.extend(space.shape)
-            space_config.space_box.low.extend(space.low.tolist())
-            space_config.space_box.high.extend(space.high.tolist())
+            space_config.box.shape.extend(space.shape)
+            space_config.box.low.extend(space.low.tolist())
+            space_config.box.high.extend(space.high.tolist())
         return space_config
 
 
@@ -106,12 +107,13 @@ class GymService(gym_env_pb2_grpc.GymServicer):
 
 def main(_):
     logging.info("GymService starting ...")
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=FLAGS.max_workers))
     gym_env_pb2_grpc.add_GymServicer_to_server(GymService(), server)
     server.add_insecure_port(":".join([FLAGS.host, FLAGS.port]))
     server.start()
     logging.info("Server started ...")
     server.wait_for_termination()
+
 
 if __name__ == "__main__":
     app.run(main)
