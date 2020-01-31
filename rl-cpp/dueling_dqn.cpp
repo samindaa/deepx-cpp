@@ -7,8 +7,12 @@
 
 namespace deepx {
 
-DuelingDqnTrainer::DuelingDqnTrainer(std::shared_ptr<Client> client, const EnvConfig &config, int64_t buffer_size)
-    : DqnTrainer(client, config, buffer_size) {}
+DuelingDqnTrainer::DuelingDqnTrainer(std::shared_ptr<Client> client,
+                                     const EnvConfig &config,
+                                     int64_t buffer_size,
+                                     int64_t batch_size,
+                                     double epsilon_decay)
+    : DqnTrainer(client, config, buffer_size, batch_size, epsilon_decay) {}
 
 void DuelingDqnTrainer::define_models_and_optim() {
   current_model_ = std::make_shared<DuelingDqn>(config_.observation_space().box().shape()[0],
@@ -17,6 +21,14 @@ void DuelingDqnTrainer::define_models_and_optim() {
                                                config_.action_space().discrete().n());
   current_model_->to(device_);
   target_model_->to(device_);
+
+  for (auto &module : current_model_->modules(/*include_self=*/false)) {
+    if (auto M = dynamic_cast<torch::nn::LinearImpl *>(module.get())) {
+      torch::nn::init::kaiming_uniform_(M->weight);
+      torch::nn::init::constant_(M->bias, 0);
+    }
+  }
+
   opt_ = std::make_shared<torch::optim::Adam>(current_model_->parameters(), torch::optim::AdamOptions{1e-3});
 
   load_from_state_dict(target_model_, current_model_);

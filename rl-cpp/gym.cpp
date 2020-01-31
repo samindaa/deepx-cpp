@@ -62,10 +62,8 @@ deepx::Step Client::Step(const EnvConfig& config, torch::Tensor action, bool ren
   StepRequest request;
   request.set_env_id(config.env_id());
   request.set_render(render);
-  auto cpu_action = action.cpu();
-  // TODO(saminda): assuming single invocation
-  for (int64_t i = 0; i < cpu_action.numel(); ++i) {
-    request.add_action(cpu_action[i].item<int>());
+  for (int64_t i = 0; i < action.numel(); ++i) {
+    request.add_action(action[i].item<int>());
   }
 
   StepResponse response;

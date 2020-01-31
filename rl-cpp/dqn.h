@@ -20,11 +20,11 @@ class DqnModule : public torch::nn::Module {
   virtual torch::Tensor act(torch::Tensor state) {
     torch::Tensor q_value = forward(state);
     torch::Tensor action = std::get<1>(q_value.max(1));
-    return action;
+    return action.cpu().detach();
   }
 };
 
-class Dqn : public DqnModule{
+class Dqn : public DqnModule {
  public:
   Dqn(int64_t num_inputs, int64_t num_actions) {
     layers_ = register_module("layers", torch::nn::Sequential(
@@ -45,7 +45,11 @@ class Dqn : public DqnModule{
 
 class DqnTrainer {
  public:
-  DqnTrainer(std::shared_ptr<Client> client, const EnvConfig& config, int64_t buffer_size = 1000);
+  DqnTrainer(std::shared_ptr<Client> client,
+             const EnvConfig &config,
+             int64_t buffer_size = 1000,
+             int64_t batch_size = 32,
+             double epsilon_decay = 500);
 
   void train(int64_t num_frames);
 
@@ -58,13 +62,13 @@ class DqnTrainer {
 
   virtual torch::Tensor compute_td_loss(int64_t batch_size, float gamma);
 
-  torch::Tensor get_state_tensor(const State& state) const;
+  torch::Tensor get_state_tensor(const State &state) const;
 
  protected:
-  int64_t batch_size_ = 32;
+  int64_t batch_size_;
+  double epsilon_decay_;
   double epsilon_start_ = 1.0;
   double epsilon_final_ = 0.01;
-  double epsilon_decay_ = 500;
   float gamma_ = 0.99;
   std::shared_ptr<Client> client_;
   EnvConfig config_;
@@ -75,7 +79,6 @@ class DqnTrainer {
   std::mt19937 rand_generator_;
   torch::Device device_;
 };
-
 
 } // namespace deepx
 

@@ -10,12 +10,16 @@
 
 namespace deepx {
 
-DqnTrainer::DqnTrainer(std::shared_ptr<Client> client, const EnvConfig &config, int64_t buffer_size) :
-    client_(client),
-    config_(config),
-    buffer_{buffer_size},
-    rand_generator_(std::random_device{}()),
-    device_(torch::cuda::is_available() ? torch::kCUDA : torch::kCPU) {
+DqnTrainer::DqnTrainer(std::shared_ptr<Client> client,
+                       const EnvConfig &config,
+                       int64_t buffer_size,
+                       int64_t batch_size,
+                       double epsilon_decay) : batch_size_(batch_size), epsilon_decay_(epsilon_decay),
+                                               client_(client),
+                                               config_(config),
+                                               buffer_{buffer_size},
+                                               rand_generator_(std::random_device{}()),
+                                               device_(torch::cuda::is_available() ? torch::kCUDA : torch::kCPU) {
 
   if (torch::cuda::is_available()) {
     std::cout << "CUDA available! Training on GPU." << std::endl;
@@ -31,6 +35,7 @@ void DqnTrainer::define_models_and_optim() {
                                         config_.action_space().discrete().n());
   current_model_->to(device_);
   target_model_->to(device_);
+
   opt_ = std::make_shared<torch::optim::Adam>(current_model_->parameters(), torch::optim::AdamOptions{1e-3});
 
   load_from_state_dict(target_model_, current_model_);
@@ -58,11 +63,13 @@ torch::Tensor DqnTrainer::compute_td_loss(int64_t batch_size, float gamma) {
     done.push_back(b_done);
   }
 
-  auto state_tensor = torch::cat(state, 0);
-  auto action_tensor = torch::cat(action, 0);
-  auto reward_tensor = torch::cat(reward, 0);
-  auto next_state_tensor = torch::cat(next_state, 0);
-  auto done_tensor = torch::cat(done, 0);
+  auto state_tensor = torch::cat(state, 0).to(device_);
+  auto action_tensor = torch::cat(action, 0).to(device_);
+  auto reward_tensor = torch::cat(reward, 0).to(device_);
+  auto next_state_tensor = torch::cat(next_state, 0).to(device_);
+  auto done_tensor = torch::cat(done, 0).to(device_);
+  std::cout << state_tensor.sizes() << action_tensor.sizes() << reward_tensor.sizes() << next_state_tensor.sizes()
+            << done_tensor.sizes() << std::endl;
 
   torch::Tensor q_values = current_model_->forward(state_tensor);
   torch::Tensor next_q_values = current_model_->forward(next_state_tensor);
@@ -84,7 +91,7 @@ torch::Tensor DqnTrainer::compute_td_loss(int64_t batch_size, float gamma) {
 }
 
 torch::Tensor DqnTrainer::get_state_tensor(const State &state) const {
-  return torch::tensor(std::vector<float>{state.obs().begin(), state.obs().end()}).view({1, -1}).to(device_);
+  return torch::tensor(std::vector<float>{state.obs().begin(), state.obs().end()});
 }
 
 void DqnTrainer::train(int64_t num_frames) {
@@ -99,15 +106,15 @@ void DqnTrainer::train(int64_t num_frames) {
 
   for (int64_t frame_id = 0; frame_id < num_frames + 1; ++frame_id) {
     double epsilon = epsilon_by_frame(frame_id);
-    torch::Tensor action_tensor = current_model_->act(state_tensor);
+    torch::Tensor action_tensor = current_model_->act(state_tensor.unsqueeze(0).to(device_));
     if (rand(rand_generator_) < epsilon) {
-      action_tensor = action_tensor.fill_(randint(rand_generator_));
+      action_tensor.fill_(randint(rand_generator_));
     }
     Step step = client_->Step(config_, action_tensor);
 
     torch::Tensor next_state_tensor = get_state_tensor(step.state());
-    torch::Tensor reward_tensor = torch::tensor(step.reward()).to(device_);
-    torch::Tensor done_tensor = torch::tensor(static_cast<float>(step.done())).to(device_);
+    torch::Tensor reward_tensor = torch::tensor(step.reward());
+    torch::Tensor done_tensor = torch::tensor(static_cast<float>(step.done()));
     buffer_.push(state_tensor, action_tensor, reward_tensor, next_state_tensor, done_tensor);
 
     state_tensor = next_state_tensor;
@@ -143,12 +150,13 @@ void DqnTrainer::test(bool render) {
   current_model_->eval();
 
   float total_reward = 0.0f;
+  int64_t steps = 0;
 
   State state = client_->Reset(config_);
   torch::Tensor state_tensor = get_state_tensor(state);
 
   while (true) {
-    torch::Tensor action_tensor = current_model_->act(state_tensor);
+    torch::Tensor action_tensor = current_model_->act(state_tensor.unsqueeze(0).to(device_));
     Step step = client_->Step(config_, action_tensor, render);
     torch::Tensor next_state_tensor = get_state_tensor(step.state());
     torch::Tensor reward_tensor = torch::tensor(step.reward());
@@ -156,12 +164,13 @@ void DqnTrainer::test(bool render) {
 
     state_tensor = next_state_tensor;
     total_reward += step.reward();
-
+    ++steps;
     if (step.done()) {
       break;
     }
   }
-  std::cout << "env_id: " << config_.env_id() << " test reward: " << total_reward << std::endl;
+  std::cout << "env_id: " << config_.env_id() << " test reward: " << total_reward << " test steps: " << steps
+            << std::endl;
 }
 
 } // namespace deepx

@@ -73,6 +73,7 @@ void TestLoadFromStateDict() {
 void TestDqn() {
   auto client = deepx::Client::create_client("localhost", "50051");
   auto config = client->Create("CartPole-v1");
+  std::cout << config.DebugString() << std::endl;
   std::shared_ptr<deepx::DqnTrainer>
       dqn_trainer = std::make_shared<deepx::DqnTrainer>(client, config, /*buffer_size=*/10000);
   dqn_trainer->define_models_and_optim();
@@ -90,13 +91,29 @@ void TestDuelingDqn() {
   dqn_trainer->test(true);
 }
 
+void TestComplexDuelingDqn() {
+  auto client = deepx::Client::create_client("localhost", "50051");
+  auto config = client->Create("MountainCar-v0");
+  std::cout << config.DebugString() << std::endl;
+  std::shared_ptr<deepx::DqnTrainer>
+      dqn_trainer = std::make_shared<deepx::DuelingDqnTrainer>(client,
+                                                               config, /*buffer_size=*/
+                                                               10000, /*batch_size=*/
+                                                               32, /*epsilon_decay=*/
+                                                               500);
+  dqn_trainer->define_models_and_optim();
+  dqn_trainer->train(/*num_frames=*/100000);
+  dqn_trainer->test(true);
+}
+
 // TODO(saminda): implement the rest of the stuff
 int main(int argc, char **argv) {
   std::cout << "*** start ***" << std::endl;
 //  TestClient();
 //  TestLoadFromStateDict();
-//  TestDqn();
-  TestDuelingDqn();
+  TestDqn();
+//  TestDuelingDqn();
+//  TestComplexDuelingDqn();
   std::cout << "** end    ***" << std::endl;
   return 0;
 }
