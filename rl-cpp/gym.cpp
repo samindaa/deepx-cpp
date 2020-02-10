@@ -25,9 +25,10 @@ std::shared_ptr<Client> Client::create_client(const std::string &addr, const std
   return client;
 }
 
-EnvConfig Client::Create(const std::string& id) {
+const EnvConfig Client::Create(const std::string &id, int num_envs) {
   CreateRequest request;
   request.set_id(id);
+  request.set_num_envs(num_envs);
   CreateResponse response;
   ClientContext context;
 
@@ -41,7 +42,7 @@ EnvConfig Client::Create(const std::string& id) {
   return response.config();
 }
 
-State Client::Reset(const EnvConfig& config) {
+torch::Tensor Client::Reset(const EnvConfig &config) {
   ResetRequest request;
   request.set_env_id(config.env_id());
 
@@ -55,15 +56,24 @@ State Client::Reset(const EnvConfig& config) {
     std::cerr << "gRPC failure" << std::endl;
     exit(-1);
   }
-  return response.state();
+
+  std::vector<torch::Tensor> states;
+  for (const auto &state : response.states()) {
+    states.emplace_back(torch::tensor(std::vector<float>{state.obs().begin(), state.obs().end()}));
+  }
+
+  return torch::stack(states);
 }
 
-deepx::Step Client::Step(const EnvConfig& config, torch::Tensor action, bool render) {
+std::tuple<torch::Tensor, torch::Tensor, torch::Tensor> Client::Step(const EnvConfig &config, torch::Tensor action) {
   StepRequest request;
   request.set_env_id(config.env_id());
-  request.set_render(render);
-  for (int64_t i = 0; i < action.numel(); ++i) {
-    request.add_action(action[i].item<int>());
+  // TODO (saminda): generalize this
+  if (action.sizes() == at::ArrayRef < int64_t > ({ 1, 1 })) {
+    request.add_action(action.item<int>());
+  } else {
+    std::cerr << "action: " << action << " has dim: " << action.sizes() << " not supported" << std::endl;
+    exit(-1);
   }
 
   StepResponse response;
@@ -76,7 +86,18 @@ deepx::Step Client::Step(const EnvConfig& config, torch::Tensor action, bool ren
     std::cerr << "gRPC failure" << std::endl;
     exit(-1);
   }
-  return response.step();
+  std::vector<torch::Tensor> states;
+  std::vector<float> rewards;
+  std::vector<int> dones;
+  for (const auto &step : response.steps()) {
+    {
+      states.emplace_back(torch::tensor(std::vector<float>{step.state().obs().begin(), step.state().obs().end()}));
+      rewards.emplace_back(step.reward());
+      dones.emplace_back(step.done());
+    }
+
+    return {torch::stack(states), torch::tensor(rewards), torch::tensor(dones)};
+  }
 }
 
 } // namespace deepx

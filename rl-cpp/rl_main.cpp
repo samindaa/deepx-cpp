@@ -7,6 +7,7 @@
 #include "gym.h"
 #include "dqn.h"
 #include "dueling_dqn.h"
+#include "reinforce_baseline.h"
 
 void TestClient() {
   auto client = deepx::Client::create_client("localhost", "50051");
@@ -91,19 +92,30 @@ void TestDuelingDqn() {
   dqn_trainer->test(true);
 }
 
-void TestComplexDuelingDqn() {
+//void TestComplexDuelingDqn() {
+//  auto client = deepx::Client::create_client("localhost", "50051");
+//  auto config = client->Create("MountainCar-v0");
+//  std::cout << config.DebugString() << std::endl;
+//  std::shared_ptr<deepx::DqnTrainer>
+//      dqn_trainer = std::make_shared<deepx::DuelingDqnTrainer>(client,
+//                                                               config, /*buffer_size=*/
+//                                                               10000, /*batch_size=*/
+//                                                               32, /*epsilon_decay=*/
+//                                                               500);
+//  dqn_trainer->define_models_and_optim();
+//  dqn_trainer->train(/*num_frames=*/100000);
+//  dqn_trainer->test(true);
+//}
+
+void TestPg() {
   auto client = deepx::Client::create_client("localhost", "50051");
-  auto config = client->Create("MountainCar-v0");
+  auto config = client->Create("CartPole-v1");
   std::cout << config.DebugString() << std::endl;
-  std::shared_ptr<deepx::DqnTrainer>
-      dqn_trainer = std::make_shared<deepx::DuelingDqnTrainer>(client,
-                                                               config, /*buffer_size=*/
-                                                               10000, /*batch_size=*/
-                                                               32, /*epsilon_decay=*/
-                                                               500);
-  dqn_trainer->define_models_and_optim();
-  dqn_trainer->train(/*num_frames=*/100000);
-  dqn_trainer->test(true);
+  std::shared_ptr<deepx::ReinforceBaselineTrainer>
+      reinforce_baseline_trainer = std::make_shared<deepx::ReinforceBaselineTrainer>(client, config);
+  reinforce_baseline_trainer->define_models_and_optim();
+  reinforce_baseline_trainer->train(/*num_frames=*/10000);
+//  dqn_trainer->test(true);
 }
 
 // TODO(saminda): implement the rest of the stuff
@@ -111,9 +123,10 @@ int main(int argc, char **argv) {
   std::cout << "*** start ***" << std::endl;
 //  TestClient();
 //  TestLoadFromStateDict();
-  TestDqn();
+//  TestDqn();
 //  TestDuelingDqn();
 //  TestComplexDuelingDqn();
+  TestPg();
   std::cout << "** end    ***" << std::endl;
   return 0;
 }

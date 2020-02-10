@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='deepx',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n\rgym_env.proto\x12\x05\x64\x65\x65px\"\x15\n\x08\x44iscrete\x12\t\n\x01n\x18\x01 \x01(\x05\"/\n\x03\x42ox\x12\r\n\x05shape\x18\x01 \x03(\x05\x12\x0b\n\x03low\x18\x02 \x03(\x02\x12\x0c\n\x04high\x18\x03 \x03(\x02\"P\n\x05Space\x12#\n\x08\x64iscrete\x18\x01 \x01(\x0b\x32\x0f.deepx.DiscreteH\x00\x12\x19\n\x03\x62ox\x18\x02 \x01(\x0b\x32\n.deepx.BoxH\x00\x42\x07\n\x05space\"\x14\n\x05State\x12\x0b\n\x03obs\x18\x01 \x03(\x02\"A\n\x04Step\x12\x1b\n\x05state\x18\x01 \x01(\x0b\x32\x0c.deepx.State\x12\x0e\n\x06reward\x18\x02 \x01(\x02\x12\x0c\n\x04\x64one\x18\x03 \x01(\x08\"h\n\tEnvConfig\x12\x0e\n\x06\x65nv_id\x18\x01 \x01(\t\x12\"\n\x0c\x61\x63tion_space\x18\x02 \x01(\x0b\x32\x0c.deepx.Space\x12\'\n\x11observation_space\x18\x03 \x01(\x0b\x32\x0c.deepx.Space\"\x1b\n\rCreateRequest\x12\n\n\x02id\x18\x01 \x01(\t\"2\n\x0e\x43reateResponse\x12 \n\x06\x63onfig\x18\x01 \x01(\x0b\x32\x10.deepx.EnvConfig\"\x1e\n\x0cResetRequest\x12\x0e\n\x06\x65nv_id\x18\x01 \x01(\t\",\n\rResetResponse\x12\x1b\n\x05state\x18\x01 \x01(\x0b\x32\x0c.deepx.State\"=\n\x0bStepRequest\x12\x0e\n\x06\x65nv_id\x18\x01 \x01(\t\x12\x0e\n\x06\x61\x63tion\x18\x02 \x03(\x05\x12\x0e\n\x06render\x18\x03 \x01(\x08\")\n\x0cStepResponse\x12\x19\n\x04step\x18\x01 \x01(\x0b\x32\x0b.deepx.Step2\xa1\x01\n\x03Gym\x12\x35\n\x06\x43reate\x12\x14.deepx.CreateRequest\x1a\x15.deepx.CreateResponse\x12\x32\n\x05Reset\x12\x13.deepx.ResetRequest\x1a\x14.deepx.ResetResponse\x12/\n\x04Step\x12\x12.deepx.StepRequest\x1a\x13.deepx.StepResponseb\x06proto3')
+  serialized_pb=_b('\n\rgym_env.proto\x12\x05\x64\x65\x65px\"\x15\n\x08\x44iscrete\x12\t\n\x01n\x18\x01 \x01(\x05\"/\n\x03\x42ox\x12\r\n\x05shape\x18\x01 \x03(\x05\x12\x0b\n\x03low\x18\x02 \x03(\x02\x12\x0c\n\x04high\x18\x03 \x03(\x02\"C\n\x05Space\x12!\n\x08\x64iscrete\x18\x01 \x01(\x0b\x32\x0f.deepx.Discrete\x12\x17\n\x03\x62ox\x18\x02 \x01(\x0b\x32\n.deepx.Box\"\x14\n\x05State\x12\x0b\n\x03obs\x18\x01 \x03(\x02\"A\n\x04Step\x12\x1b\n\x05state\x18\x01 \x01(\x0b\x32\x0c.deepx.State\x12\x0e\n\x06reward\x18\x02 \x01(\x02\x12\x0c\n\x04\x64one\x18\x03 \x01(\x08\"z\n\tEnvConfig\x12\x0e\n\x06\x65nv_id\x18\x01 \x01(\t\x12\x10\n\x08num_envs\x18\x02 \x01(\x05\x12\"\n\x0c\x61\x63tion_space\x18\x03 \x01(\x0b\x32\x0c.deepx.Space\x12\'\n\x11observation_space\x18\x04 \x01(\x0b\x32\x0c.deepx.Space\"-\n\rCreateRequest\x12\n\n\x02id\x18\x01 \x01(\t\x12\x10\n\x08num_envs\x18\x02 \x01(\x05\"2\n\x0e\x43reateResponse\x12 \n\x06\x63onfig\x18\x01 \x01(\x0b\x32\x10.deepx.EnvConfig\"\x1e\n\x0cResetRequest\x12\x0e\n\x06\x65nv_id\x18\x01 \x01(\t\"-\n\rResetResponse\x12\x1c\n\x06states\x18\x01 \x03(\x0b\x32\x0c.deepx.State\"-\n\x0bStepRequest\x12\x0e\n\x06\x65nv_id\x18\x01 \x01(\t\x12\x0e\n\x06\x61\x63tion\x18\x02 \x03(\x05\"*\n\x0cStepResponse\x12\x1a\n\x05steps\x18\x01 \x03(\x0b\x32\x0b.deepx.Step\"\x1e\n\x0c\x43loseRequest\x12\x0e\n\x06\x65nv_id\x18\x01 \x01(\t\"\r\n\x0bListRequest\"\x1f\n\x0cListResponse\x12\x0f\n\x07\x65nv_ids\x18\x01 \x03(\t\"\x0f\n\rCloseResponse2\x86\x02\n\x03Gym\x12\x35\n\x06\x43reate\x12\x14.deepx.CreateRequest\x1a\x15.deepx.CreateResponse\x12\x32\n\x05Reset\x12\x13.deepx.ResetRequest\x1a\x14.deepx.ResetResponse\x12/\n\x04Step\x12\x12.deepx.StepRequest\x1a\x13.deepx.StepResponse\x12\x32\n\x05\x43lose\x12\x13.deepx.CloseRequest\x1a\x14.deepx.CloseResponse\x12/\n\x04List\x12\x12.deepx.ListRequest\x1a\x13.deepx.ListResponseb\x06proto3')
 )
 
 
@@ -134,12 +134,9 @@ _SPACE = _descriptor.Descriptor(
   syntax='proto3',
   extension_ranges=[],
   oneofs=[
-    _descriptor.OneofDescriptor(
-      name='space', full_name='deepx.Space.space',
-      index=0, containing_type=None, fields=[]),
   ],
   serialized_start=96,
-  serialized_end=176,
+  serialized_end=163,
 )
 
 
@@ -169,8 +166,8 @@ _STATE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=178,
-  serialized_end=198,
+  serialized_start=165,
+  serialized_end=185,
 )
 
 
@@ -214,8 +211,8 @@ _STEP = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=200,
-  serialized_end=265,
+  serialized_start=187,
+  serialized_end=252,
 )
 
 
@@ -234,15 +231,22 @@ _ENVCONFIG = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='action_space', full_name='deepx.EnvConfig.action_space', index=1,
-      number=2, type=11, cpp_type=10, label=1,
+      name='num_envs', full_name='deepx.EnvConfig.num_envs', index=1,
+      number=2, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='action_space', full_name='deepx.EnvConfig.action_space', index=2,
+      number=3, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='observation_space', full_name='deepx.EnvConfig.observation_space', index=2,
-      number=3, type=11, cpp_type=10, label=1,
+      name='observation_space', full_name='deepx.EnvConfig.observation_space', index=3,
+      number=4, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -259,8 +263,8 @@ _ENVCONFIG = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=267,
-  serialized_end=371,
+  serialized_start=254,
+  serialized_end=376,
 )
 
 
@@ -278,6 +282,13 @@ _CREATEREQUEST = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='num_envs', full_name='deepx.CreateRequest.num_envs', index=1,
+      number=2, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -290,8 +301,8 @@ _CREATEREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=373,
-  serialized_end=400,
+  serialized_start=378,
+  serialized_end=423,
 )
 
 
@@ -321,8 +332,8 @@ _CREATERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=402,
-  serialized_end=452,
+  serialized_start=425,
+  serialized_end=475,
 )
 
 
@@ -352,8 +363,8 @@ _RESETREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=454,
-  serialized_end=484,
+  serialized_start=477,
+  serialized_end=507,
 )
 
 
@@ -365,9 +376,9 @@ _RESETRESPONSE = _descriptor.Descriptor(
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='state', full_name='deepx.ResetResponse.state', index=0,
-      number=1, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
+      name='states', full_name='deepx.ResetResponse.states', index=0,
+      number=1, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
@@ -383,8 +394,8 @@ _RESETRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=486,
-  serialized_end=530,
+  serialized_start=509,
+  serialized_end=554,
 )
 
 
@@ -409,13 +420,6 @@ _STEPREQUEST = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='render', full_name='deepx.StepRequest.render', index=2,
-      number=3, type=8, cpp_type=7, label=1,
-      has_default_value=False, default_value=False,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -428,8 +432,8 @@ _STEPREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=532,
-  serialized_end=593,
+  serialized_start=556,
+  serialized_end=601,
 )
 
 
@@ -441,9 +445,9 @@ _STEPRESPONSE = _descriptor.Descriptor(
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='step', full_name='deepx.StepResponse.step', index=0,
-      number=1, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
+      name='steps', full_name='deepx.StepResponse.steps', index=0,
+      number=1, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
@@ -459,24 +463,128 @@ _STEPRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=595,
-  serialized_end=636,
+  serialized_start=603,
+  serialized_end=645,
+)
+
+
+_CLOSEREQUEST = _descriptor.Descriptor(
+  name='CloseRequest',
+  full_name='deepx.CloseRequest',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='env_id', full_name='deepx.CloseRequest.env_id', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=647,
+  serialized_end=677,
+)
+
+
+_LISTREQUEST = _descriptor.Descriptor(
+  name='ListRequest',
+  full_name='deepx.ListRequest',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=679,
+  serialized_end=692,
+)
+
+
+_LISTRESPONSE = _descriptor.Descriptor(
+  name='ListResponse',
+  full_name='deepx.ListResponse',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='env_ids', full_name='deepx.ListResponse.env_ids', index=0,
+      number=1, type=9, cpp_type=9, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=694,
+  serialized_end=725,
+)
+
+
+_CLOSERESPONSE = _descriptor.Descriptor(
+  name='CloseResponse',
+  full_name='deepx.CloseResponse',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=727,
+  serialized_end=742,
 )
 
 _SPACE.fields_by_name['discrete'].message_type = _DISCRETE
 _SPACE.fields_by_name['box'].message_type = _BOX
-_SPACE.oneofs_by_name['space'].fields.append(
-  _SPACE.fields_by_name['discrete'])
-_SPACE.fields_by_name['discrete'].containing_oneof = _SPACE.oneofs_by_name['space']
-_SPACE.oneofs_by_name['space'].fields.append(
-  _SPACE.fields_by_name['box'])
-_SPACE.fields_by_name['box'].containing_oneof = _SPACE.oneofs_by_name['space']
 _STEP.fields_by_name['state'].message_type = _STATE
 _ENVCONFIG.fields_by_name['action_space'].message_type = _SPACE
 _ENVCONFIG.fields_by_name['observation_space'].message_type = _SPACE
 _CREATERESPONSE.fields_by_name['config'].message_type = _ENVCONFIG
-_RESETRESPONSE.fields_by_name['state'].message_type = _STATE
-_STEPRESPONSE.fields_by_name['step'].message_type = _STEP
+_RESETRESPONSE.fields_by_name['states'].message_type = _STATE
+_STEPRESPONSE.fields_by_name['steps'].message_type = _STEP
 DESCRIPTOR.message_types_by_name['Discrete'] = _DISCRETE
 DESCRIPTOR.message_types_by_name['Box'] = _BOX
 DESCRIPTOR.message_types_by_name['Space'] = _SPACE
@@ -489,6 +597,10 @@ DESCRIPTOR.message_types_by_name['ResetRequest'] = _RESETREQUEST
 DESCRIPTOR.message_types_by_name['ResetResponse'] = _RESETRESPONSE
 DESCRIPTOR.message_types_by_name['StepRequest'] = _STEPREQUEST
 DESCRIPTOR.message_types_by_name['StepResponse'] = _STEPRESPONSE
+DESCRIPTOR.message_types_by_name['CloseRequest'] = _CLOSEREQUEST
+DESCRIPTOR.message_types_by_name['ListRequest'] = _LISTREQUEST
+DESCRIPTOR.message_types_by_name['ListResponse'] = _LISTRESPONSE
+DESCRIPTOR.message_types_by_name['CloseResponse'] = _CLOSERESPONSE
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 Discrete = _reflection.GeneratedProtocolMessageType('Discrete', (_message.Message,), {
@@ -575,6 +687,34 @@ StepResponse = _reflection.GeneratedProtocolMessageType('StepResponse', (_messag
   })
 _sym_db.RegisterMessage(StepResponse)
 
+CloseRequest = _reflection.GeneratedProtocolMessageType('CloseRequest', (_message.Message,), {
+  'DESCRIPTOR' : _CLOSEREQUEST,
+  '__module__' : 'gym_env_pb2'
+  # @@protoc_insertion_point(class_scope:deepx.CloseRequest)
+  })
+_sym_db.RegisterMessage(CloseRequest)
+
+ListRequest = _reflection.GeneratedProtocolMessageType('ListRequest', (_message.Message,), {
+  'DESCRIPTOR' : _LISTREQUEST,
+  '__module__' : 'gym_env_pb2'
+  # @@protoc_insertion_point(class_scope:deepx.ListRequest)
+  })
+_sym_db.RegisterMessage(ListRequest)
+
+ListResponse = _reflection.GeneratedProtocolMessageType('ListResponse', (_message.Message,), {
+  'DESCRIPTOR' : _LISTRESPONSE,
+  '__module__' : 'gym_env_pb2'
+  # @@protoc_insertion_point(class_scope:deepx.ListResponse)
+  })
+_sym_db.RegisterMessage(ListResponse)
+
+CloseResponse = _reflection.GeneratedProtocolMessageType('CloseResponse', (_message.Message,), {
+  'DESCRIPTOR' : _CLOSERESPONSE,
+  '__module__' : 'gym_env_pb2'
+  # @@protoc_insertion_point(class_scope:deepx.CloseResponse)
+  })
+_sym_db.RegisterMessage(CloseResponse)
+
 
 
 _GYM = _descriptor.ServiceDescriptor(
@@ -583,8 +723,8 @@ _GYM = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=0,
   serialized_options=None,
-  serialized_start=639,
-  serialized_end=800,
+  serialized_start=745,
+  serialized_end=1007,
   methods=[
   _descriptor.MethodDescriptor(
     name='Create',
@@ -611,6 +751,24 @@ _GYM = _descriptor.ServiceDescriptor(
     containing_service=None,
     input_type=_STEPREQUEST,
     output_type=_STEPRESPONSE,
+    serialized_options=None,
+  ),
+  _descriptor.MethodDescriptor(
+    name='Close',
+    full_name='deepx.Gym.Close',
+    index=3,
+    containing_service=None,
+    input_type=_CLOSEREQUEST,
+    output_type=_CLOSERESPONSE,
+    serialized_options=None,
+  ),
+  _descriptor.MethodDescriptor(
+    name='List',
+    full_name='deepx.Gym.List',
+    index=4,
+    containing_service=None,
+    input_type=_LISTREQUEST,
+    output_type=_LISTRESPONSE,
     serialized_options=None,
   ),
 ])

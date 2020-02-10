@@ -21,11 +21,14 @@ class Env {
 class Client {
  public:
   std::shared_ptr<Env> make(const std::string &id);
-  static std::shared_ptr<Client> create_client(const std::string &addr, const std::string& port);
+  static std::shared_ptr<Client> create_client(const std::string &addr, const std::string &port);
 
-  EnvConfig Create(const std::string& id);
-  State Reset(const EnvConfig& config);
-  deepx::Step Step(const EnvConfig& config, torch::Tensor action, bool render = false);
+  const EnvConfig Create(const std::string &id, int num_envs);
+
+  torch::Tensor Reset(const EnvConfig &config);
+
+  // Returns: [states, rewards, dones]
+  std::tuple<torch::Tensor, torch::Tensor, torch::Tensor> Step(const EnvConfig &config, torch::Tensor action);
 
   Client() = default;
 

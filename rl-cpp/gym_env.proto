@@ -13,10 +13,8 @@ message Box {
 }
 
 message Space {
-    oneof space {
-        Discrete discrete = 1;
-        Box box = 2;
-    }
+    Discrete discrete = 1;
+    Box box = 2;
 }
 
 message State {
@@ -31,12 +29,14 @@ message Step {
 
 message EnvConfig {
     string env_id = 1;
-    Space action_space = 2;
-    Space observation_space = 3;
+    int32 num_envs = 2;
+    Space action_space = 3;
+    Space observation_space = 4;
 }
 
 message CreateRequest {
     string id = 1;
+    int32 num_envs = 2;
 }
 
 message CreateResponse {
@@ -48,21 +48,34 @@ message ResetRequest {
 }
 
 message ResetResponse {
-    State state = 1;
+    repeated State states = 1;
 }
 
 message StepRequest {
     string env_id = 1;
     repeated int32 action = 2;
-    bool render = 3;
 }
 
 message StepResponse {
-    Step step = 1;
+    repeated Step steps = 1;
 }
+
+message CloseRequest {
+    string env_id = 1;
+}
+
+message ListRequest {}
+
+message ListResponse {
+    repeated string env_ids = 1;
+}
+
+message CloseResponse {}
 
 service Gym {
     rpc Create(CreateRequest) returns (CreateResponse);
     rpc Reset(ResetRequest) returns (ResetResponse);
     rpc Step(StepRequest) returns (StepResponse);
+    rpc Close(CloseRequest) returns (CloseResponse);
+    rpc List(ListRequest) returns (ListResponse);
 }

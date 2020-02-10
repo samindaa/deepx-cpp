@@ -68,8 +68,6 @@ torch::Tensor DqnTrainer::compute_td_loss(int64_t batch_size, float gamma) {
   auto reward_tensor = torch::cat(reward, 0).to(device_);
   auto next_state_tensor = torch::cat(next_state, 0).to(device_);
   auto done_tensor = torch::cat(done, 0).to(device_);
-  std::cout << state_tensor.sizes() << action_tensor.sizes() << reward_tensor.sizes() << next_state_tensor.sizes()
-            << done_tensor.sizes() << std::endl;
 
   torch::Tensor q_values = current_model_->forward(state_tensor);
   torch::Tensor next_q_values = current_model_->forward(next_state_tensor);
@@ -91,7 +89,7 @@ torch::Tensor DqnTrainer::compute_td_loss(int64_t batch_size, float gamma) {
 }
 
 torch::Tensor DqnTrainer::get_state_tensor(const State &state) const {
-  return torch::tensor(std::vector<float>{state.obs().begin(), state.obs().end()});
+  return torch::tensor(std::vector<float>{state.obs().begin(), state.obs().end()}).unsqueeze(0);
 }
 
 void DqnTrainer::train(int64_t num_frames) {
@@ -106,7 +104,7 @@ void DqnTrainer::train(int64_t num_frames) {
 
   for (int64_t frame_id = 0; frame_id < num_frames + 1; ++frame_id) {
     double epsilon = epsilon_by_frame(frame_id);
-    torch::Tensor action_tensor = current_model_->act(state_tensor.unsqueeze(0).to(device_));
+    torch::Tensor action_tensor = current_model_->act(state_tensor.to(device_));
     if (rand(rand_generator_) < epsilon) {
       action_tensor.fill_(randint(rand_generator_));
     }
@@ -156,7 +154,7 @@ void DqnTrainer::test(bool render) {
   torch::Tensor state_tensor = get_state_tensor(state);
 
   while (true) {
-    torch::Tensor action_tensor = current_model_->act(state_tensor.unsqueeze(0).to(device_));
+    torch::Tensor action_tensor = current_model_->act(state_tensor.to(device_));
     Step step = client_->Step(config_, action_tensor, render);
     torch::Tensor next_state_tensor = get_state_tensor(step.state());
     torch::Tensor reward_tensor = torch::tensor(step.reward());

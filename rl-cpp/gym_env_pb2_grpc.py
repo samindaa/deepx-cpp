@@ -29,6 +29,16 @@ class GymStub(object):
         request_serializer=gym__env__pb2.StepRequest.SerializeToString,
         response_deserializer=gym__env__pb2.StepResponse.FromString,
         )
+    self.Close = channel.unary_unary(
+        '/deepx.Gym/Close',
+        request_serializer=gym__env__pb2.CloseRequest.SerializeToString,
+        response_deserializer=gym__env__pb2.CloseResponse.FromString,
+        )
+    self.List = channel.unary_unary(
+        '/deepx.Gym/List',
+        request_serializer=gym__env__pb2.ListRequest.SerializeToString,
+        response_deserializer=gym__env__pb2.ListResponse.FromString,
+        )
 
 
 class GymServicer(object):
@@ -56,6 +66,20 @@ class GymServicer(object):
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
+  def Close(self, request, context):
+    # missing associated documentation comment in .proto file
+    pass
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def List(self, request, context):
+    # missing associated documentation comment in .proto file
+    pass
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
 
 def add_GymServicer_to_server(servicer, server):
   rpc_method_handlers = {
@@ -73,6 +97,16 @@ def add_GymServicer_to_server(servicer, server):
           servicer.Step,
           request_deserializer=gym__env__pb2.StepRequest.FromString,
           response_serializer=gym__env__pb2.StepResponse.SerializeToString,
+      ),
+      'Close': grpc.unary_unary_rpc_method_handler(
+          servicer.Close,
+          request_deserializer=gym__env__pb2.CloseRequest.FromString,
+          response_serializer=gym__env__pb2.CloseResponse.SerializeToString,
+      ),
+      'List': grpc.unary_unary_rpc_method_handler(
+          servicer.List,
+          request_deserializer=gym__env__pb2.ListRequest.FromString,
+          response_serializer=gym__env__pb2.ListResponse.SerializeToString,
       ),
   }
   generic_handler = grpc.method_handlers_generic_handler(

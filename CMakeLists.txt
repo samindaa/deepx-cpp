@@ -26,7 +26,9 @@ find_package(Torch REQUIRED)
 message(STATUS "CMAKE_CURRENT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}")
 set(gym_env ${CMAKE_CURRENT_SOURCE_DIR}/rl-cpp/gym_env.proto)
 
-set(PROTO_SRC_DIR ${CMAKE_CURRENT_BINARY_DIR}/proto-src)
+#set(PROTO_SRC_DIR ${CMAKE_CURRENT_BINARY_DIR}/proto-src)
+# TODO(saminda): outside build
+set(PROTO_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/proto-src)
 file(MAKE_DIRECTORY ${PROTO_SRC_DIR})
 
 # Include generated *.pb.h files
@@ -60,14 +62,26 @@ grpc_generate_cpp(GRPC_SRCS GRPC_HDRS ${PROTO_SRC_DIR} ${gym_env})
 #add_executable(deepx_cpp ${MODELS_HEADERS} ${MODELS_SOURCES} torch-cpp/cifar.cpp torch-cpp/cifar.h torch-cpp/vision_main.cpp ptan-cpp/actions.h)
 #add_executable(deepx_cpp ptan-cpp/actions.h ptan-cpp/ptan_main.cpp ptan-cpp/agent.h)
 add_executable(deepx_cpp
-    rl-cpp/rl_main.cpp
-	rl-cpp/replay_buffer.h
-	rl-cpp/replay_buffer.cpp
-	rl-cpp/dqn.h
+#	rl-cpp/replay_buffer.h
+#	rl-cpp/replay_buffer.cpp
+#	rl-cpp/dqn.h
 	rl-cpp/gym.h
 	rl-cpp/gym.cpp
         ${PROTO_SRCS}
-        ${GRPC_SRCS} rl-cpp/common.h rl-cpp/common.cpp rl-cpp/dqn.cpp rl-cpp/dueling_dqn.h rl-cpp/dueling_dqn.cpp)
+        ${GRPC_SRCS}
+#		rl-cpp/common.h
+#		rl-cpp/common.cpp
+#		rl-cpp/dqn.cpp
+#		rl-cpp/dueling_dqn.h
+#		rl-cpp/dueling_dqn.cpp
+#		rl-cpp/spinup/algos/vpg/vpg.h
+#		rl-cpp/spinup/algos/vpg/core.h
+#		rl-cpp/reinforce_baseline.h
+#		rl-cpp/reinforce_baseline.cpp
+		# rl-cpp/rl_main.cpp
+		# rl-cpp/spinup_main.cpp
+		# rl-cpp/empty_main.cpp
+        rl-cpp/actor_crtic.cpp)
 
 target_link_libraries(deepx_cpp
         ${_GRPC_GRPCPP_REFLECTION}
